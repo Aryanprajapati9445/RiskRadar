@@ -190,6 +190,13 @@ def add_transaction_view():
     return render_template("add_transaction.html", user=session.get("user"))
 
 
+@main_bp.route("/devops")
+@login_required
+def devops_view():
+    """DevOps Infrastructure & System Health visual portal."""
+    return render_template("devops.html", user=session.get("user"))
+
+
 # -------------------------------------------------------------
 # REST API Endpoints
 # -------------------------------------------------------------

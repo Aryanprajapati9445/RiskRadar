@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}DevOps Observability &middot; FraudGuard CyberOps{% endblock %}
+{% block page_title %}DevOps Observability & Infrastructure Center{% endblock %}
+
+{% block content %}
+<!-- Explanatory Mission Control Notice -->
+<section class="card" style="border-left: 4px solid var(--accent-blue); background: linear-gradient(135deg, rgba(19, 29, 51, 0.95), rgba(15, 23, 42, 0.95));">
+    <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <div style="background: rgba(56, 189, 248, 0.15); width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent-blue); font-size: 1.3rem; flex-shrink: 0;">
+            <i class="fa-solid fa-circle-nodes"></i>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 4px;">
+                Understanding DevOps Telemetry: Machine APIs vs. Human Dashboards
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                In a real-world production DevOps pipeline, endpoints like <a href="/health" target="_blank" style="color: var(--accent-blue); font-family: var(--font-mono);"><code>/health</code></a> and <a href="/metrics" target="_blank" style="color: var(--accent-blue); font-family: var(--font-mono);"><code>/metrics</code></a> are <strong>machine-to-machine endpoints</strong>. They intentionally return raw JSON and Prometheus text so that <strong>Docker, Kubernetes, and Prometheus</strong> can scrape and parse them automatically every 5 seconds without UI overhead.
+            </p>
+            <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">
+                Below is the visual <strong>Human Operations Dashboard</strong> displaying these live metrics in real-time.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Infrastructure Node Status Grid -->
+<section class="kpi-grid">
+    <!-- Node 1: Flask Web App -->
+    <div class="kpi-card" style="border-top: 3px solid #10b981;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Core Web Service</span>
+            <div class="kpi-icon-wrap icon-emerald">
+                <i class="fa-solid fa-server"></i>
+            </div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+            <div class="kpi-value" style="color: #34d399; font-size: 1.8rem;">HEALTHY</div>
+        </div>
+        <div class="kpi-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; font-family: var(--font-mono); font-size: 0.76rem;">
+            <div>Target: <code>fraud_detection_app</code></div>
+            <div>Runtime: Python 3.11 + Gunicorn WSGI</div>
+            <div>Uptime Probe: <code>GET /health</code> (200 OK)</div>
+        </div>
+    </div>
+
+    <!-- Node 2: SQLite Ledger -->
+    <div class="kpi-card" style="border-top: 3px solid #38bdf8;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Database Storage</span>
+            <div class="kpi-icon-wrap icon-blue">
+                <i class="fa-solid fa-database"></i>
+            </div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+            <div class="kpi-value" style="color: #38bdf8; font-size: 1.8rem;">CONNECTED</div>
+        </div>
+        <div class="kpi-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; font-family: var(--font-mono); font-size: 0.76rem;">
+            <div>Engine: SQLite 3 / SQLAlchemy ORM</div>
+            <div>Monitored Records: 1,000 transactions</div>
+            <div>Latency: &lt; 1ms local I/O</div>
+        </div>
+    </div>
+
+    <!-- Node 3: Prometheus Daemon -->
+    <div class="kpi-card" style="border-top: 3px solid #f59e0b;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Prometheus Daemon</span>
+            <div class="kpi-icon-wrap icon-amber">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+            <div class="kpi-value" style="color: #fbbf24; font-size: 1.8rem;">SCRAPING</div>
+        </div>
+        <div class="kpi-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; font-family: var(--font-mono); font-size: 0.76rem;">
+            <div>Port: <code>9090</code> (Internal Network)</div>
+            <div>Scrape Interval: 5 seconds</div>
+            <div>Job: <code>fraud_detection_app</code></div>
+        </div>
+    </div>
+
+    <!-- Node 4: Grafana Analytics -->
+    <div class="kpi-card" style="border-top: 3px solid #a855f7;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Grafana Analytics</span>
+            <div class="kpi-icon-wrap" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+                <i class="fa-solid fa-gauge-high"></i>
+            </div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+            <div class="kpi-value" style="color: #c084fc; font-size: 1.8rem;">PORT 3000</div>
+        </div>
+        <div class="kpi-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; font-family: var(--font-mono); font-size: 0.76rem;">
+            <div>UI: <a href="http://localhost:3000" target="_blank" style="color: #c084fc;">http://localhost:3000</a></div>
+            <div>Auth: <code>admin</code> / <code>admin</code></div>
+            <div>Dashboard: Fraud Detection Platform</div>
+        </div>
+    </div>
+</section>
+
+<!-- Live Interactive Testing & Telemetry Console -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    
+    <!-- Left: Health Probe Inspector -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff;">
+                <i class="fa-solid fa-heart-pulse" style="color: #10b981; margin-right: 8px;"></i>
+                Synthetic Health Check Probe
+            </h3>
+            <button type="button" class="btn btn-primary btn-sm" onclick="runLiveHealthCheck()">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Ping /health</span>
+            </button>
+        </div>
+        
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            Automated synthetic check that Docker's <code>HEALTHCHECK</code> daemon calls every 15 seconds.
+        </p>
+
+        <div id="health-live-box" style="background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; font-family: var(--font-mono); font-size: 0.82rem; color: #34d399; line-height: 1.6;">
+            <div style="color: var(--text-muted);">// Querying http://localhost:5001/health...</div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.78rem; color: var(--text-muted);">Raw HTTP Endpoint:</span>
+            <a href="/health" target="_blank" class="cyber-pill">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Raw JSON (/health)
+            </a>
+        </div>
+    </div>
+
+    <!-- Right: Prometheus Metrics Inspector -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff;">
+                <i class="fa-solid fa-chart-line" style="color: var(--accent-blue); margin-right: 8px;"></i>
+                Prometheus Scrape Telemetry
+            </h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loadLiveMetricsSnippet()">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Inspect /metrics</span>
+            </button>
+        </div>
+
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            OpenMetrics text format harvested continuously by Prometheus at Port 9090.
+        </p>
+
+        <div id="metrics-live-box" style="background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; font-family: var(--font-mono); font-size: 0.8rem; color: #38bdf8; line-height: 1.6; max-height: 220px; overflow-y: auto;">
+            <div style="color: var(--text-muted);">// Fetching active telemetry counters...</div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.78rem; color: var(--text-muted);">Raw Scrape Exporter:</span>
+            <a href="/metrics" target="_blank" class="cyber-pill">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Raw Scrape (/metrics)
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<!-- External Dashboards Launch Station -->
+<section class="card" style="margin-top: 24px; border-top: 3px solid #c084fc;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-cubes-stacked" style="color: #c084fc;"></i>
+        <span>External Observability Services (Running in Docker)</span>
+    </h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Grafana Box -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-card); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">
+                    <i class="fa-solid fa-chart-simple" style="color: #f59e0b; margin-right: 6px;"></i>
+                    Grafana Executive Dashboards
+                </h4>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">PORT 3000</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+                Grafana provides rich, customizable enterprise charts visualizing HTTP Request Rates, Latency Gauges, and Flagged Transactions.
+            </p>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px; font-family: var(--font-mono);">
+                Default Credentials: User: <code>admin</code> &middot; Pass: <code>admin</code>
+            </div>
+            <a href="http://localhost:3000" target="_blank" class="btn btn-primary btn-sm" style="width: 100%;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Open Grafana Portal (Port 3000)</span>
+            </a>
+        </div>
+
+        <!-- Prometheus Box -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-card); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">
+                    <i class="fa-solid fa-fire-flame-curved" style="color: #ef4444; margin-right: 6px;"></i>
+                    Prometheus Time-Series Engine
+                </h4>
+                <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171;">PORT 9090</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+                Prometheus collects, queries, and evaluates time-series metrics. Inspect the Target Scrape health at <code>/targets</code>.
+            </p>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px; font-family: var(--font-mono);">
+                Target Status: <code>UP (http://app:5000/metrics)</code>
+            </div>
+            <a href="http://localhost:9090" target="_blank" class="btn btn-secondary btn-sm" style="width: 100%;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Open Prometheus Web Console (Port 9090)</span>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function runLiveHealthCheck() {
+    const box = document.getElementById("health-live-box");
+    box.innerHTML = `<span style="color: var(--accent-blue);"><i class="fa-solid fa-spinner fa-spin"></i> Pinging /health...</span>`;
+    try {
+        const res = await fetch("/health");
+        const data = await res.json();
+        box.innerHTML = `
+            <div style="color: #34d399; font-weight: 700; margin-bottom: 6px;">
+                <i class="fa-solid fa-circle-check"></i> HTTP 200 OK - SERVICE HEALTHY
+            </div>
+            <pre style="margin: 0; color: #e2e8f0;">${JSON.stringify(data, null, 2)}</pre>
+        `;
+    } catch (e) {
+        box.innerHTML = `<span style="color: #f43f5e;">Error reaching health probe: ${e}</span>`;
+    }
+}
+
+async function loadLiveMetricsSnippet() {
+    const box = document.getElementById("metrics-live-box");
+    box.innerHTML = `<span style="color: var(--accent-blue);"><i class="fa-solid fa-spinner fa-spin"></i> Fetching Prometheus metrics...</span>`;
+    try {
+        const res = await fetch("/metrics");
+        const text = await res.text();
+        const lines = text.split("\n")
+            .filter(l => l.includes("fraud_") || l.includes("http_requests_total") || l.includes("http_request_duration"))
+            .slice(0, 15)
+            .join("\n");
+        box.innerHTML = `
+            <div style="color: #38bdf8; font-weight: 700; margin-bottom: 6px;">
+                <i class="fa-solid fa-bolt"></i> Scraped Prometheus Samples:
+            </div>
+            <pre style="margin: 0; color: #e2e8f0; font-size: 0.76rem;">${lines || text.slice(0, 500)}</pre>
+        `;
+    } catch (e) {
+        box.innerHTML = `<span style="color: #f43f5e;">Error fetching metrics: ${e}</span>`;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    runLiveHealthCheck();
+    loadLiveMetricsSnippet();
+});
+</script>
+{% endblock %}

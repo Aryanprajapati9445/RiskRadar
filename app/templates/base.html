@@ -47,21 +47,21 @@
 
                 <li class="menu-category">DevOps & Observability</li>
                 <li>
-                    <a href="{{ url_for('main.health_check') }}" target="_blank">
-                        <i class="fa-solid fa-heart-pulse"></i>
-                        <span>Health Probes</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('main.metrics') }}" target="_blank">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Prometheus Scrape</span>
+                    <a href="{{ url_for('main.devops_view') }}" class="{% if request.endpoint == 'main.devops_view' %}active{% endif %}">
+                        <i class="fa-solid fa-server"></i>
+                        <span>System Health & Nodes</span>
                     </a>
                 </li>
                 <li>
                     <a href="http://localhost:3000" target="_blank">
                         <i class="fa-solid fa-gauge-high"></i>
-                        <span>Grafana Ops (3000)</span>
+                        <span>Grafana Dashboards ↗</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="http://localhost:9090" target="_blank">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Prometheus Console ↗</span>
                     </a>
                 </li>
             </ul>
