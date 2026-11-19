@@ -37,6 +37,17 @@ def test_amount_boundary_50k_not_triggered():
     assert len(res["triggered_rules"]) == 0
 
 
+def test_critical_payload_above_85k():
+    """An amount > 85,000 triggers Rule 1 (+40) and Rule 2 (+20) = 60 pts."""
+    timestamp = datetime(2026, 11, 19, 14, 0, 0)
+    res = calculate_risk_score(amount=92000.0, timestamp=timestamp)
+
+    assert res["risk_score"] == 60
+    assert res["risk_level"] == "Medium"
+    assert len(res["triggered_rules"]) == 2
+    assert any("Critical payload" in r for r in res["triggered_rules"])
+
+
 def test_night_time_transaction():
     """Transaction between 12 AM and 5 AM adds 30 points."""
     # 2:15 AM
@@ -101,18 +112,60 @@ def test_velocity_exactly_3_transactions_not_triggered():
     assert len(res["triggered_rules"]) == 0
 
 
-def test_all_rules_combined_max_score_100():
-    """All 3 rules active: 40 + 30 + 30 = 100 points (High risk)."""
-    curr = datetime(2026, 11, 19, 3, 10, 0)  # Night
-    recent = [
-        curr - timedelta(minutes=1),
-        curr - timedelta(minutes=2),
-        curr - timedelta(minutes=3),
-        curr - timedelta(minutes=5)
-    ]  # Velocity
+def test_impossible_travel_anomaly():
+    """Transaction in Mumbai 25 minutes after Delhi adds 35 points."""
+    curr = datetime(2026, 11, 19, 12, 30, 0)
+    history = [
+        {"timestamp": curr - timedelta(minutes=25), "city": "Delhi", "amount": 1200.0, "type": "UPI"}
+    ]
+    res = calculate_risk_score(amount=1500.0, timestamp=curr, recent_transactions=history, city="Mumbai")
 
-    res = calculate_risk_score(amount=85000.0, timestamp=curr, recent_transactions=recent)
+    assert res["risk_score"] == 35
+    assert res["risk_level"] == "Low"
+    assert any("Impossible travel" in r for r in res["triggered_rules"])
+
+
+def test_high_risk_atm_cash_withdrawal():
+    """ATM withdrawal > ₹25,000 adds 25 points."""
+    curr = datetime(2026, 11, 19, 14, 0, 0)
+    res = calculate_risk_score(amount=30000.0, timestamp=curr, payment_type="ATM")
+
+    assert res["risk_score"] == 25
+    assert any("ATM withdrawal" in r for r in res["triggered_rules"])
+
+
+def test_repetitive_identical_amount_probe():
+    """Two identical amounts in past 15 min triggers card testing probe rule (+20 pts)."""
+    curr = datetime(2026, 11, 19, 15, 0, 0)
+    history = [
+        {"timestamp": curr - timedelta(minutes=4), "amount": 99.0},
+        {"timestamp": curr - timedelta(minutes=8), "amount": 99.0}
+    ]
+    res = calculate_risk_score(amount=99.0, timestamp=curr, recent_transactions=history)
+
+    assert res["risk_score"] == 20
+    assert any("Repetitive identical amount probe" in r for r in res["triggered_rules"])
+
+
+def test_all_rules_combined_max_score_100():
+    """All rules combined caps strictly at max 100 points (High risk)."""
+    curr = datetime(2026, 11, 19, 3, 10, 0)  # Night (+30)
+    history = [
+        {"timestamp": curr - timedelta(minutes=1), "city": "Delhi", "amount": 90000.0, "type": "ATM"},
+        {"timestamp": curr - timedelta(minutes=2), "city": "Delhi", "amount": 90000.0, "type": "ATM"},
+        {"timestamp": curr - timedelta(minutes=3), "city": "Delhi", "amount": 90000.0, "type": "ATM"},
+        {"timestamp": curr - timedelta(minutes=5), "city": "Delhi", "amount": 90000.0, "type": "ATM"}
+    ]  # Velocity (+30) + Travel from Delhi (+35) + Repeat probe (+20)
+
+    # In Mumbai (+35) + ATM > 25k (+25) + Amount > 85k (+40 + 20)
+    res = calculate_risk_score(
+        amount=90000.0,
+        timestamp=curr,
+        recent_transactions=history,
+        city="Mumbai",
+        payment_type="ATM"
+    )
 
     assert res["risk_score"] == 100
     assert res["risk_level"] == "High"
-    assert len(res["triggered_rules"]) == 3
+    assert len(res["triggered_rules"]) >= 4

@@ -106,9 +106,14 @@
                     <span>Ingestion Hour Baseline (+0 pts)</span>
                 </div>
 
+                <div id="sim-rule-channel" class="rule-threat-card safe" style="font-size: 0.82rem; padding: 10px 12px;">
+                    <i class="fa-solid fa-circle-check" style="color: #34d399;"></i>
+                    <span>Normal Channel Baseline (+0 pts)</span>
+                </div>
+
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.5; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
                     <i class="fa-solid fa-circle-info" style="color: var(--accent-blue); margin-right: 4px;"></i>
-                    Velocity rule (&gt;3 txns / 10m) will be cross-referenced against past user ledger history in real-time.
+                    Velocity (&gt;3 txns / 10m) & Impossible Travel (&gt;1 city / 1h) are correlated against live ledger history.
                 </div>
             </div>
         </div>
@@ -123,12 +128,16 @@ function updateLiveSimulator() {
     const amountVal = parseFloat(document.getElementById("amount").value) || 0;
     let score = 0;
 
-    // Check Rule 1: Amount > 50,000
+    // Check Rule 1: Amount > 50,000 and > 85,000
     const ruleAmountEl = document.getElementById("sim-rule-amount");
-    if (amountVal > 50000) {
+    if (amountVal > 85000) {
+        score += 60; // 40 + 20
+        ruleAmountEl.className = "rule-threat-card";
+        ruleAmountEl.innerHTML = `<i class="fa-solid fa-biohazard" style="color: #fb7185;"></i> <span>Critical Amount > ₹85k (+60 pts)</span>`;
+    } else if (amountVal > 50000) {
         score += 40;
         ruleAmountEl.className = "rule-threat-card";
-        ruleAmountEl.innerHTML = `<i class="fa-solid fa-biohazard" style="color: #fb7185;"></i> <span>Amount > ₹50,000 threshold (+40 pts)</span>`;
+        ruleAmountEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i> <span>Amount > ₹50k threshold (+40 pts)</span>`;
     } else {
         ruleAmountEl.className = "rule-threat-card safe";
         ruleAmountEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #34d399;"></i> <span>Amount within regular threshold (+0 pts)</span>`;
@@ -140,10 +149,22 @@ function updateLiveSimulator() {
     if (currentHour >= 0 && currentHour < 5) {
         score += 30;
         ruleTimeEl.className = "rule-threat-card";
-        ruleTimeEl.innerHTML = `<i class="fa-solid fa-moon" style="color: #fb7185;"></i> <span>Night Hour Window (12 AM - 5 AM UTC) (+30 pts)</span>`;
+        ruleTimeEl.innerHTML = `<i class="fa-solid fa-moon" style="color: #fb7185;"></i> <span>Night Window (12 AM - 5 AM UTC) (+30 pts)</span>`;
     } else {
         ruleTimeEl.className = "rule-threat-card safe";
         ruleTimeEl.innerHTML = `<i class="fa-solid fa-sun" style="color: #34d399;"></i> <span>Daytime Operating Hours (+0 pts)</span>`;
+    }
+
+    // Check Rule 6: ATM Cash > 25,000
+    const channelVal = document.getElementById("type").value;
+    const ruleChannelEl = document.getElementById("sim-rule-channel");
+    if (channelVal === "ATM" && amountVal > 25000) {
+        score += 25;
+        ruleChannelEl.className = "rule-threat-card";
+        ruleChannelEl.innerHTML = `<i class="fa-solid fa-money-bill-transfer" style="color: #fbbf24;"></i> <span>High ATM Cash Withdrawal > ₹25k (+25 pts)</span>`;
+    } else {
+        ruleChannelEl.className = "rule-threat-card safe";
+        ruleChannelEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #34d399;"></i> <span>Channel Parameters Safe (+0 pts)</span>`;
     }
 
     // Update display

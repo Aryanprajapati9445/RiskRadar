@@ -153,16 +153,21 @@ def add_transaction_view():
 
         txn_time = datetime.utcnow()
 
-        # Check recent transactions of this user in past 15 minutes for velocity check
-        ten_mins_ago = txn_time - timedelta(minutes=15)
+        # Check recent transactions of this user in past 60 minutes for travel/velocity checks
+        one_hour_ago = txn_time - timedelta(hours=1)
         recent_txns = Transaction.query.filter(
             Transaction.user_id == user_id,
-            Transaction.timestamp >= ten_mins_ago,
+            Transaction.timestamp >= one_hour_ago,
             Transaction.timestamp <= txn_time
         ).all()
-        recent_timestamps = [t.timestamp for t in recent_txns]
 
-        scoring = calculate_risk_score(amount, txn_time, recent_timestamps)
+        scoring = calculate_risk_score(
+            amount=amount,
+            timestamp=txn_time,
+            recent_transactions=recent_txns,
+            city=city,
+            payment_type=txn_type
+        )
         status = "Flagged" if scoring["risk_score"] >= 40 else "Safe"
 
         new_txn = Transaction(
@@ -288,17 +293,22 @@ def api_create_transaction():
     else:
         txn_time = datetime.utcnow()
 
-    # Query user transactions in the preceding 15 minutes
-    ten_mins_ago = txn_time - timedelta(minutes=15)
+    # Query user transactions in the preceding 60 minutes
+    one_hour_ago = txn_time - timedelta(hours=1)
     recent_txns = Transaction.query.filter(
         Transaction.user_id == user_id,
-        Transaction.timestamp >= ten_mins_ago,
+        Transaction.timestamp >= one_hour_ago,
         Transaction.timestamp <= txn_time
     ).all()
-    recent_timestamps = [t.timestamp for t in recent_txns]
 
     # Evaluate risk score
-    scoring = calculate_risk_score(amount, txn_time, recent_timestamps)
+    scoring = calculate_risk_score(
+        amount=amount,
+        timestamp=txn_time,
+        recent_transactions=recent_txns,
+        city=city,
+        payment_type=txn_type
+    )
     status = "Flagged" if scoring["risk_score"] >= 40 else "Safe"
 
     txn = Transaction(
