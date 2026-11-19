@@ -1,0 +1,4 @@
+[flake8]
+exclude = .venv,venv,__pycache__,.git,instance,build,dist
+max-line-length = 120
+max-complexity = 10

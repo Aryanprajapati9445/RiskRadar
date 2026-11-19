@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - FraudGuard{% endblock %}
+{% block page_title %}Monitored Financial Transactions{% endblock %}
+
+{% block content %}
+<div class="card">
+    <!-- Filter & Search Bar -->
+    <form method="GET" action="{{ url_for('main.transactions_view') }}" class="filter-bar">
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+            <label class="form-label" for="search">Search</label>
+            <input type="text" id="search" name="search" class="form-input" placeholder="User ID, City, or Type..." value="{{ search }}">
+        </div>
+
+        <div class="form-group" style="min-width: 150px;">
+            <label class="form-label" for="risk_level">Risk Level</label>
+            <select id="risk_level" name="risk_level" class="form-select">
+                <option value="All" {% if risk_level == 'All' or not risk_level %}selected{% endif %}>All Levels</option>
+                <option value="Low" {% if risk_level == 'Low' %}selected{% endif %}>Low (0 - 39)</option>
+                <option value="Medium" {% if risk_level == 'Medium' %}selected{% endif %}>Medium (40 - 69)</option>
+                <option value="High" {% if risk_level == 'High' %}selected{% endif %}>High (70 - 100)</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="min-width: 160px;">
+            <label class="form-label" for="status">Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="All" {% if status == 'All' or not status %}selected{% endif %}>All Statuses</option>
+                <option value="Safe" {% if status == 'Safe' %}selected{% endif %}>Safe</option>
+                <option value="Flagged" {% if status == 'Flagged' %}selected{% endif %}>Flagged</option>
+                <option value="Confirmed Fraud" {% if status == 'Confirmed Fraud' %}selected{% endif %}>Confirmed Fraud</option>
+                <option value="Blocked" {% if status == 'Blocked' %}selected{% endif %}>Blocked</option>
+            </select>
+        </div>
+
+        <div style="display: flex; align-items: flex-end; gap: 8px;">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('main.transactions_view') }}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <!-- Transactions Data Table -->
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Txn ID</th>
+                    <th>User ID</th>
+                    <th>Amount (₹)</th>
+                    <th>City</th>
+                    <th>Payment Type</th>
+                    <th>Timestamp</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transactions %}
+                    {% for txn in transactions %}
+                    <tr>
+                        <td><strong>#{{ txn.id }}</strong></td>
+                        <td><code>{{ txn.user_id }}</code></td>
+                        <td><strong>₹{{ "{:,.2f}".format(txn.amount) }}</strong></td>
+                        <td>{{ txn.city }}</td>
+                        <td><span style="font-size: 0.8rem; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">{{ txn.type }}</span></td>
+                        <td style="font-size: 0.82rem; color: #64748b;">{{ txn.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            {% if txn.risk_level == 'High' %}
+                                <span class="badge badge-high">{{ txn.risk_score }} (High)</span>
+                            {% elif txn.risk_level == 'Medium' %}
+                                <span class="badge badge-medium">{{ txn.risk_score }} (Medium)</span>
+                            {% else %}
+                                <span class="badge badge-low">{{ txn.risk_score }} (Low)</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if txn.status == 'Safe' %}
+                                <span class="badge badge-safe">Safe</span>
+                            {% elif txn.status == 'Flagged' %}
+                                <span class="badge badge-flagged">Flagged</span>
+                            {% elif txn.status == 'Confirmed Fraud' %}
+                                <span class="badge badge-fraud">Fraud</span>
+                            {% elif txn.status == 'Blocked' %}
+                                <span class="badge badge-blocked">Blocked</span>
+                            {% else %}
+                                <span class="badge badge-safe">{{ txn.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('main.investigate_view', id=txn.id) }}" class="btn btn-primary btn-sm">Investigate</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 32px; color: #64748b;">
+                            No transactions found matching the filter criteria.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('main.transactions_view', page=pagination.prev_num, search=search, risk_level=risk_level, status=status) }}" class="page-link">&laquo; Prev</a>
+        {% endif %}
+
+        <span style="font-size: 0.82rem; color: #64748b; padding: 6px 10px;">
+            Page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} records)
+        </span>
+
+        {% if pagination.has_next %}
+            <a href="{{ url_for('main.transactions_view', page=pagination.next_num, search=search, risk_level=risk_level, status=status) }}" class="page-link">Next &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

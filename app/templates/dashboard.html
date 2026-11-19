@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FraudGuard{% endblock %}
+{% block page_title %}Fraud Detection Analytics & Overview{% endblock %}
+
+{% block content %}
+<!-- KPI Metric Cards Grid -->
+<section class="kpi-grid">
+    <div class="kpi-card">
+        <span class="kpi-title">Total Transactions</span>
+        <div class="kpi-value" id="kpi-total">--</div>
+        <span class="kpi-desc">Monitored in past 7 days</span>
+    </div>
+
+    <div class="kpi-card" style="border-left: 4px solid #f59e0b;">
+        <span class="kpi-title">Flagged Suspicious</span>
+        <div class="kpi-value" id="kpi-flagged" style="color: #d97706;">--</div>
+        <span class="kpi-desc">Transactions requiring review</span>
+    </div>
+
+    <div class="kpi-card" style="border-left: 4px solid #ef4444;">
+        <span class="kpi-title">High Risk (Score ≥ 70)</span>
+        <div class="kpi-value" id="kpi-high-risk" style="color: #dc2626;">--</div>
+        <span class="kpi-desc">Immediate action recommended</span>
+    </div>
+
+    <div class="kpi-card" style="border-left: 4px solid #3b82f6;">
+        <span class="kpi-title">Fraud Incidence Rate</span>
+        <div class="kpi-value" id="kpi-rate" style="color: #2563eb;">--%</div>
+        <span class="kpi-desc">Target threshold: &lt; 5.0%</span>
+    </div>
+</section>
+
+<!-- Interactive Charts Grid -->
+<section class="charts-grid">
+    <!-- Chart 1: Risk Distribution -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Transactions by Risk Level</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Low &lt;40 | Medium 40-69 | High ≥70</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="riskDistributionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 2: Alerts Over Time -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Fraud Alerts Over Time</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Last 7 Days Trend</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="alertsTimelineChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Action & DevOps Callout -->
+<section class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.05rem; font-weight: 600;">System DevOps & Operations Guide</h3>
+        <a href="{{ url_for('main.transactions_view') }}" class="btn btn-primary btn-sm">Explore All Transactions ➔</a>
+    </div>
+    <div style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
+        <p>• <strong>Automated Scoring:</strong> Every inbound transaction is immediately processed by the rule-based engine in <code>fraud_engine.py</code>.</p>
+        <p>• <strong>Monitoring:</strong> Metrics are exposed at <a href="/metrics" target="_blank"><code>/metrics</code></a> and continuously scraped by Prometheus (Port 9090) and visualized on Grafana (Port 3000).</p>
+        <p>• <strong>Health Probes:</strong> Docker and Kubernetes health checks are serviced at <a href="/health" target="_blank"><code>/health</code></a>.</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

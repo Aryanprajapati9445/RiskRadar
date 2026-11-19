@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Add Transaction - FraudGuard{% endblock %}
+{% block page_title %}Simulate / Ingest New Transaction{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="card">
+        <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 6px;">New Transaction Ingestion</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">
+            Input transaction details below. The system will immediately evaluate the transaction against real-time fraud rules and assign an instant risk score.
+        </p>
+
+        <form method="POST" action="{{ url_for('main.add_transaction_view') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;">
+                <div class="form-group">
+                    <label class="form-label" for="user_id">User Identifier *</label>
+                    <input type="text" id="user_id" name="user_id" class="form-input" placeholder="e.g. USR1088" required autofocus>
+                    <small style="font-size: 0.75rem; color: #64748b;">Must be a valid user ID (e.g. USR1001 - USR1200)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="amount">Transaction Amount (₹) *</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="1" class="form-input" placeholder="e.g. 52000" required>
+                    <small style="font-size: 0.75rem; color: #64748b;">Amounts &gt; ₹50,000 trigger a +40 risk flag</small>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label class="form-label" for="city">Transaction Location (City) *</label>
+                    <select id="city" name="city" class="form-select" required>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Kolkata">Kolkata</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="type">Payment Method *</label>
+                    <select id="type" name="type" class="form-select" required>
+                        <option value="UPI">UPI</option>
+                        <option value="Card">Card</option>
+                        <option value="NetBanking">NetBanking</option>
+                        <option value="ATM">ATM</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Fraud Engine Rule Reference Info Box -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px;">
+                <div style="font-weight: 600; font-size: 0.85rem; color: #1e293b; margin-bottom: 6px;">
+                    Active Scoring Logic (Rule-Based Engine):
+                </div>
+                <ul style="font-size: 0.82rem; color: #475569; padding-left: 18px; line-height: 1.5;">
+                    <li><strong>Amount &gt; ₹50,000:</strong> +40 points</li>
+                    <li><strong>Night Hour (12:00 AM - 5:00 AM):</strong> +30 points</li>
+                    <li><strong>Velocity (&gt; 3 transactions in 10 minutes):</strong> +30 points</li>
+                    <li><strong>Risk Level:</strong> 0-39 (Low), 40-69 (Medium - Flagged), 70-100 (High - Flagged)</li>
+                </ul>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <a href="{{ url_for('main.transactions_view') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                    Score & Save Transaction ➔
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

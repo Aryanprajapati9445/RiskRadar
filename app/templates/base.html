@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FraudGuard - Fraud Detection Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-badge">🛡️</div>
+                <h2>FraudGuard</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('main.dashboard_view') }}" class="{% if request.endpoint == 'main.dashboard_view' %}active{% endif %}">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('main.transactions_view') }}" class="{% if request.endpoint == 'main.transactions_view' %}active{% endif %}">
+                        <span>💳</span>
+                        <span>Transactions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('main.add_transaction_view') }}" class="{% if request.endpoint == 'main.add_transaction_view' %}active{% endif %}">
+                        <span>➕</span>
+                        <span>Add Transaction</span>
+                    </a>
+                </li>
+                <li style="margin-top: 24px; padding: 0 14px; font-size: 0.72rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">
+                    DevOps & APIs
+                </li>
+                <li>
+                    <a href="{{ url_for('main.health_check') }}" target="_blank">
+                        <span>🩺</span>
+                        <span>Health Probe</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('main.metrics') }}" target="_blank">
+                        <span>📈</span>
+                        <span>Prometheus Metrics</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                {% if user %}
+                <div class="user-profile-badge">
+                    <div class="user-info">
+                        <span class="username">{{ user.username }}</span>
+                        <span class="role-tag">{{ user.role }}</span>
+                    </div>
+                    <a href="{{ url_for('main.logout_view') }}" class="logout-btn" title="Sign Out">Sign Out ➔</a>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-title">
+                    {% block page_title %}DevOps Fraud Detection Management{% endblock %}
+                </div>
+                <div class="topbar-actions">
+                    <span class="nav-pill">System: Online</span>
+                    <a href="{{ url_for('main.metrics') }}" target="_blank" class="nav-pill">Prometheus: /metrics</a>
+                    <a href="{{ url_for('main.health_check') }}" target="_blank" class="nav-pill">API: /health</a>
+                </div>
+            </header>
+
+            <!-- Page Content Body -->
+            <main class="content-body">
+                <!-- Flash Messages -->
+                <div class="flash-container">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
