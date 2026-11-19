@@ -3,50 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - FraudGuard</title>
+    <title>Sign In &middot; FraudGuard CyberOps</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .demo-credentials-box {
-            margin-top: 24px;
-            padding: 14px;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px dashed #cbd5e1;
-            font-size: 0.82rem;
-            color: #475569;
-        }
-        .demo-cred-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 6px;
-        }
-        .quick-fill-btn {
-            background: #e2e8f0;
-            border: none;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .quick-fill-btn:hover {
-            background: #cbd5e1;
-        }
-    </style>
 </head>
 <body class="login-body">
     <div class="login-card">
-        <div style="text-align: center; margin-bottom: 24px;">
-            <div style="font-size: 2.2rem; margin-bottom: 8px;">🛡️</div>
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">FraudGuard Portal</h2>
-            <p style="font-size: 0.88rem; color: #64748b; margin-top: 4px;">Fraud Risk Scoring & Investigation Dashboard</p>
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">FraudGuard CyberOps</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">
+                Financial Fraud Monitoring & Incident Response Gateway
+            </p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>{{ message }}</span>
                     </div>
                 {% endfor %}
@@ -54,30 +31,43 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('main.login_view') }}">
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label class="form-label" for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-input" placeholder="e.g. admin or analyst" required autofocus>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" for="username">Operator / Username</label>
+                <div style="position: relative;">
+                    <input type="text" id="username" name="username" class="form-input" style="width: 100%; padding-left: 38px;" placeholder="admin or analyst" required autofocus>
+                    <i class="fa-solid fa-user-shield" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
+                </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 22px;">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label class="form-label" for="password">Security Credential / Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" class="form-input" style="width: 100%; padding-left: 38px;" placeholder="••••••••" required>
+                    <i class="fa-solid fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
+                </div>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; font-size: 0.95rem;">
-                Sign In to Dashboard
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.3px;">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Authorize & Sign In</span>
             </button>
         </form>
 
         <div class="demo-credentials-box">
-            <div style="font-weight: 600; margin-bottom: 6px; color: #1e293b;">Default College Demo Accounts:</div>
-            <div class="demo-cred-row">
-                <span>🔑 <strong>Admin:</strong> admin / admin123</span>
-                <button type="button" class="quick-fill-btn" onclick="fillCreds('admin', 'admin123')">Fill Admin</button>
+            <div style="font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;">
+                <i class="fa-solid fa-key" style="margin-right: 4px;"></i> Pre-Seeded Academic Demo Profiles:
             </div>
             <div class="demo-cred-row">
-                <span>🔍 <strong>Analyst:</strong> analyst / analyst123</span>
-                <button type="button" class="quick-fill-btn" onclick="fillCreds('analyst', 'analyst123')">Fill Analyst</button>
+                <span>🛡️ <strong>Admin:</strong> <code>admin</code> / <code>admin123</code></span>
+                <button type="button" class="quick-fill-btn" onclick="fillCreds('admin', 'admin123')">
+                    Auto-Fill Admin
+                </button>
+            </div>
+            <div class="demo-cred-row">
+                <span>🔍 <strong>Analyst:</strong> <code>analyst</code> / <code>analyst123</code></span>
+                <button type="button" class="quick-fill-btn" onclick="fillCreds('analyst', 'analyst123')">
+                    Auto-Fill Analyst
+                </button>
             </div>
         </div>
     </div>

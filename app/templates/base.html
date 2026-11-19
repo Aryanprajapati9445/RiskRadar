@@ -3,63 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FraudGuard - Fraud Detection Dashboard{% endblock %}</title>
+    <title>{% block title %}FraudGuard CyberOps - Fraud Risk & DevOps Platform{% endblock %}</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Chart.js CDN -->
+    <!-- Chart.js 4 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Enterprise CyberOps Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo-badge">🛡️</div>
-                <h2>FraudGuard</h2>
+                <div class="brand-shield">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h2>FraudGuard</h2>
+                    <span class="brand-tag">CyberOps &middot; v2.4</span>
+                </div>
             </div>
+
             <ul class="sidebar-menu">
+                <li class="menu-category">Intelligence & Monitoring</li>
                 <li>
                     <a href="{{ url_for('main.dashboard_view') }}" class="{% if request.endpoint == 'main.dashboard_view' %}active{% endif %}">
-                        <span>📊</span>
-                        <span>Dashboard</span>
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Threat Analytics</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ url_for('main.transactions_view') }}" class="{% if request.endpoint == 'main.transactions_view' %}active{% endif %}">
-                        <span>💳</span>
-                        <span>Transactions</span>
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Transactions Feed</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ url_for('main.add_transaction_view') }}" class="{% if request.endpoint == 'main.add_transaction_view' %}active{% endif %}">
-                        <span>➕</span>
-                        <span>Add Transaction</span>
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span>Ingest / Simulator</span>
                     </a>
                 </li>
-                <li style="margin-top: 24px; padding: 0 14px; font-size: 0.72rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">
-                    DevOps & APIs
-                </li>
+
+                <li class="menu-category">DevOps & Observability</li>
                 <li>
                     <a href="{{ url_for('main.health_check') }}" target="_blank">
-                        <span>🩺</span>
-                        <span>Health Probe</span>
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        <span>Health Probes</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ url_for('main.metrics') }}" target="_blank">
-                        <span>📈</span>
-                        <span>Prometheus Metrics</span>
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Prometheus Scrape</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="http://localhost:3000" target="_blank">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>Grafana Ops (3000)</span>
                     </a>
                 </li>
             </ul>
 
             <div class="sidebar-footer">
                 {% if user %}
-                <div class="user-profile-badge">
+                <div class="user-profile-card">
                     <div class="user-info">
-                        <span class="username">{{ user.username }}</span>
-                        <span class="role-tag">{{ user.role }}</span>
+                        <div class="user-avatar">
+                            {{ user.username[0]|upper }}
+                        </div>
+                        <div class="user-details">
+                            <div class="uname">{{ user.username }}</div>
+                            <span class="urole">{{ user.role }}</span>
+                        </div>
                     </div>
-                    <a href="{{ url_for('main.logout_view') }}" class="logout-btn" title="Sign Out">Sign Out ➔</a>
+                    <a href="{{ url_for('main.logout_view') }}" class="logout-icon-btn" title="Sign Out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
                 </div>
                 {% endif %}
             </div>
@@ -67,15 +88,24 @@
 
         <!-- Main Wrapper -->
         <div class="main-wrapper">
-            <!-- Topbar -->
+            <!-- Glassmorphic Topbar -->
             <header class="topbar">
-                <div class="topbar-title">
-                    {% block page_title %}DevOps Fraud Detection Management{% endblock %}
+                <div class="topbar-title-section">
+                    <h1 class="topbar-title">{% block page_title %}Fraud Detection & Risk Scoring Dashboard{% endblock %}</h1>
                 </div>
                 <div class="topbar-actions">
-                    <span class="nav-pill">System: Online</span>
-                    <a href="{{ url_for('main.metrics') }}" target="_blank" class="nav-pill">Prometheus: /metrics</a>
-                    <a href="{{ url_for('main.health_check') }}" target="_blank" class="nav-pill">API: /health</a>
+                    <div class="status-pill">
+                        <span class="pulse-dot"></span>
+                        <span>SYSTEM ACTIVE</span>
+                    </div>
+                    <a href="{{ url_for('main.metrics') }}" target="_blank" class="cyber-pill">
+                        <i class="fa-solid fa-terminal"></i>
+                        <span>/metrics</span>
+                    </a>
+                    <a href="{{ url_for('main.health_check') }}" target="_blank" class="cyber-pill">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>/health</span>
+                    </a>
                 </div>
             </header>
 
@@ -87,6 +117,7 @@
                         {% if messages %}
                             {% for category, message in messages %}
                                 <div class="alert alert-{{ category }}">
+                                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-triangle-exclamation{% elif category == 'warning' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
                                     <span>{{ message }}</span>
                                 </div>
                             {% endfor %}

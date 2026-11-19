@@ -1,74 +1,172 @@
 {% extends "base.html" %}
 
-{% block title %}Add Transaction - FraudGuard{% endblock %}
-{% block page_title %}Simulate / Ingest New Transaction{% endblock %}
+{% block title %}Simulate & Ingest Transaction &middot; FraudGuard CyberOps{% endblock %}
+{% block page_title %}Transaction Ingestion & Fraud Risk Simulator{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
-    <div class="card">
-        <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 6px;">New Transaction Ingestion</h3>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">
-            Input transaction details below. The system will immediately evaluate the transaction against real-time fraud rules and assign an instant risk score.
-        </p>
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px;">
+        
+        <!-- Left: Transaction Entry Form -->
+        <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-satellite-dish" style="color: var(--accent-blue);"></i>
+                <span>Direct Ingestion Terminal</span>
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 22px;">
+                Inject a new financial payload into the ledger. The transaction will be evaluated synchronously against active behavioral detection rules.
+            </p>
 
-        <form method="POST" action="{{ url_for('main.add_transaction_view') }}">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;">
-                <div class="form-group">
-                    <label class="form-label" for="user_id">User Identifier *</label>
-                    <input type="text" id="user_id" name="user_id" class="form-input" placeholder="e.g. USR1088" required autofocus>
-                    <small style="font-size: 0.75rem; color: #64748b;">Must be a valid user ID (e.g. USR1001 - USR1200)</small>
+            <form method="POST" action="{{ url_for('main.add_transaction_view') }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+                    <div class="form-group">
+                        <label class="form-label" for="user_id">
+                            <i class="fa-solid fa-user-tag"></i> User Identifier *
+                        </label>
+                        <input type="text" id="user_id" name="user_id" class="form-input" placeholder="e.g. USR1088" required autofocus oninput="updateLiveSimulator()">
+                        <small style="font-size: 0.72rem; color: var(--text-muted);">Format: USR1001 - USR1200</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="amount">
+                            <i class="fa-solid fa-indian-rupee-sign"></i> Amount (INR) *
+                        </label>
+                        <input type="number" id="amount" name="amount" step="0.01" min="1" class="form-input" placeholder="e.g. 65000" required oninput="updateLiveSimulator()">
+                        <small style="font-size: 0.72rem; color: var(--text-muted);">&gt; ₹50,000 adds +40 risk points</small>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="amount">Transaction Amount (₹) *</label>
-                    <input type="number" id="amount" name="amount" step="0.01" min="1" class="form-input" placeholder="e.g. 52000" required>
-                    <small style="font-size: 0.75rem; color: #64748b;">Amounts &gt; ₹50,000 trigger a +40 risk flag</small>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label" for="city">
+                            <i class="fa-solid fa-location-dot"></i> Location (City) *
+                        </label>
+                        <select id="city" name="city" class="form-select" required onchange="updateLiveSimulator()">
+                            <option value="Delhi">Delhi</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Kolkata">Kolkata</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="type">
+                            <i class="fa-solid fa-credit-card"></i> Payment Channel *
+                        </label>
+                        <select id="type" name="type" class="form-select" required onchange="updateLiveSimulator()">
+                            <option value="UPI">UPI (Instant Transfer)</option>
+                            <option value="Card">Card (Debit/Credit)</option>
+                            <option value="NetBanking">NetBanking</option>
+                            <option value="ATM">ATM Withdrawal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                    <a href="{{ url_for('main.transactions_view') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" style="padding: 11px 24px;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Score & Commit Transaction</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right: Live Interactive Rule Simulator -->
+        <div>
+            <div class="card" style="border-top: 3px solid #38bdf8;">
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-gauge" style="color: #38bdf8;"></i>
+                    <span>Live Pre-Ingestion Estimate</span>
+                </h3>
+
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 18px;">
+                    <div id="sim-score-display" style="font-size: 2.8rem; font-weight: 800; color: #34d399; font-family: var(--font-sans); line-height: 1;">
+                        0
+                    </div>
+                    <div id="sim-level-display" style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: #34d399; letter-spacing: 1px; margin-top: 6px;">
+                        LOW RISK &middot; SAFE
+                    </div>
+                </div>
+
+                <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;">
+                    Predictive Rule Triggers:
+                </div>
+
+                <div id="sim-rule-amount" class="rule-threat-card safe" style="font-size: 0.82rem; padding: 10px 12px;">
+                    <i class="fa-solid fa-circle-check" style="color: #34d399;"></i>
+                    <span>Amount &le; ₹50,000 (0 pts)</span>
+                </div>
+
+                <div id="sim-rule-time" class="rule-threat-card safe" style="font-size: 0.82rem; padding: 10px 12px;">
+                    <i class="fa-solid fa-circle-check" style="color: #34d399;"></i>
+                    <span>Ingestion Hour Baseline (+0 pts)</span>
+                </div>
+
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.5; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+                    <i class="fa-solid fa-circle-info" style="color: var(--accent-blue); margin-right: 4px;"></i>
+                    Velocity rule (&gt;3 txns / 10m) will be cross-referenced against past user ledger history in real-time.
                 </div>
             </div>
+        </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px;">
-                <div class="form-group">
-                    <label class="form-label" for="city">Transaction Location (City) *</label>
-                    <select id="city" name="city" class="form-select" required>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Kolkata">Kolkata</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="type">Payment Method *</label>
-                    <select id="type" name="type" class="form-select" required>
-                        <option value="UPI">UPI</option>
-                        <option value="Card">Card</option>
-                        <option value="NetBanking">NetBanking</option>
-                        <option value="ATM">ATM</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Fraud Engine Rule Reference Info Box -->
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px;">
-                <div style="font-weight: 600; font-size: 0.85rem; color: #1e293b; margin-bottom: 6px;">
-                    Active Scoring Logic (Rule-Based Engine):
-                </div>
-                <ul style="font-size: 0.82rem; color: #475569; padding-left: 18px; line-height: 1.5;">
-                    <li><strong>Amount &gt; ₹50,000:</strong> +40 points</li>
-                    <li><strong>Night Hour (12:00 AM - 5:00 AM):</strong> +30 points</li>
-                    <li><strong>Velocity (&gt; 3 transactions in 10 minutes):</strong> +30 points</li>
-                    <li><strong>Risk Level:</strong> 0-39 (Low), 40-69 (Medium - Flagged), 70-100 (High - Flagged)</li>
-                </ul>
-            </div>
-
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <a href="{{ url_for('main.transactions_view') }}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
-                    Score & Save Transaction ➔
-                </button>
-            </div>
-        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateLiveSimulator() {
+    const amountVal = parseFloat(document.getElementById("amount").value) || 0;
+    let score = 0;
+
+    // Check Rule 1: Amount > 50,000
+    const ruleAmountEl = document.getElementById("sim-rule-amount");
+    if (amountVal > 50000) {
+        score += 40;
+        ruleAmountEl.className = "rule-threat-card";
+        ruleAmountEl.innerHTML = `<i class="fa-solid fa-biohazard" style="color: #fb7185;"></i> <span>Amount > ₹50,000 threshold (+40 pts)</span>`;
+    } else {
+        ruleAmountEl.className = "rule-threat-card safe";
+        ruleAmountEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #34d399;"></i> <span>Amount within regular threshold (+0 pts)</span>`;
+    }
+
+    // Check Rule 2: Current Hour (Night 00:00 - 05:00)
+    const currentHour = new Date().getUTCHours();
+    const ruleTimeEl = document.getElementById("sim-rule-time");
+    if (currentHour >= 0 && currentHour < 5) {
+        score += 30;
+        ruleTimeEl.className = "rule-threat-card";
+        ruleTimeEl.innerHTML = `<i class="fa-solid fa-moon" style="color: #fb7185;"></i> <span>Night Hour Window (12 AM - 5 AM UTC) (+30 pts)</span>`;
+    } else {
+        ruleTimeEl.className = "rule-threat-card safe";
+        ruleTimeEl.innerHTML = `<i class="fa-solid fa-sun" style="color: #34d399;"></i> <span>Daytime Operating Hours (+0 pts)</span>`;
+    }
+
+    // Update display
+    const scoreDisplay = document.getElementById("sim-score-display");
+    const levelDisplay = document.getElementById("sim-level-display");
+
+    scoreDisplay.textContent = score;
+
+    if (score >= 70) {
+        scoreDisplay.style.color = "#fb7185";
+        levelDisplay.style.color = "#fb7185";
+        levelDisplay.textContent = "CRITICAL HIGH RISK · FLAGGED";
+    } else if (score >= 40) {
+        scoreDisplay.style.color = "#fbbf24";
+        levelDisplay.style.color = "#fbbf24";
+        levelDisplay.textContent = "MEDIUM RISK · FLAGGED";
+    } else {
+        scoreDisplay.style.color = "#34d399";
+        levelDisplay.style.color = "#34d399";
+        levelDisplay.textContent = "LOW RISK · SAFE";
+    }
+}
+// Run once on load
+document.addEventListener("DOMContentLoaded", updateLiveSimulator);
+</script>
 {% endblock %}

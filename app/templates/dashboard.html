@@ -1,54 +1,108 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - FraudGuard{% endblock %}
-{% block page_title %}Fraud Detection Analytics & Overview{% endblock %}
+{% block title %}Threat Intelligence &middot; FraudGuard{% endblock %}
+{% block page_title %}Real-Time Fraud Threat Intelligence{% endblock %}
 
 {% block content %}
-<!-- KPI Metric Cards Grid -->
+<!-- Executive KPI Threat Cards Grid -->
 <section class="kpi-grid">
+    <!-- Card 1: Total Ingested -->
     <div class="kpi-card">
-        <span class="kpi-title">Total Transactions</span>
+        <div class="kpi-card-header">
+            <span class="kpi-title">Ingested Transactions</span>
+            <div class="kpi-icon-wrap icon-blue">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+        </div>
         <div class="kpi-value" id="kpi-total">--</div>
-        <span class="kpi-desc">Monitored in past 7 days</span>
+        <div class="kpi-footer">
+            <span class="kpi-trend" style="color: #38bdf8;">
+                <i class="fa-solid fa-bolt"></i> Live Feed
+            </span>
+            <span>&middot; Monitored last 7 days</span>
+        </div>
     </div>
 
-    <div class="kpi-card" style="border-left: 4px solid #f59e0b;">
-        <span class="kpi-title">Flagged Suspicious</span>
-        <div class="kpi-value" id="kpi-flagged" style="color: #d97706;">--</div>
-        <span class="kpi-desc">Transactions requiring review</span>
+    <!-- Card 2: Flagged Suspicious -->
+    <div class="kpi-card" style="border-top: 3px solid #f59e0b;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Flagged Incidents</span>
+            <div class="kpi-icon-wrap icon-amber">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+        </div>
+        <div class="kpi-value" id="kpi-flagged" style="color: #fbbf24;">--</div>
+        <div class="kpi-footer">
+            <span class="kpi-trend" style="color: #fbbf24;">
+                <i class="fa-solid fa-eye"></i> Triage Required
+            </span>
+            <span>&middot; Score &ge; 40 pts</span>
+        </div>
     </div>
 
-    <div class="kpi-card" style="border-left: 4px solid #ef4444;">
-        <span class="kpi-title">High Risk (Score ≥ 70)</span>
-        <div class="kpi-value" id="kpi-high-risk" style="color: #dc2626;">--</div>
-        <span class="kpi-desc">Immediate action recommended</span>
+    <!-- Card 3: High Risk Threats -->
+    <div class="kpi-card" style="border-top: 3px solid #f43f5e;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Critical High Risk</span>
+            <div class="kpi-icon-wrap icon-red">
+                <i class="fa-solid fa-radiation"></i>
+            </div>
+        </div>
+        <div class="kpi-value" id="kpi-high-risk" style="color: #fb7185;">--</div>
+        <div class="kpi-footer">
+            <span class="kpi-trend" style="color: #fb7185;">
+                <i class="fa-solid fa-shield-virus"></i> Score &ge; 70 pts
+            </span>
+            <span>&middot; Immediate Action</span>
+        </div>
     </div>
 
-    <div class="kpi-card" style="border-left: 4px solid #3b82f6;">
-        <span class="kpi-title">Fraud Incidence Rate</span>
-        <div class="kpi-value" id="kpi-rate" style="color: #2563eb;">--%</div>
-        <span class="kpi-desc">Target threshold: &lt; 5.0%</span>
+    <!-- Card 4: Incident Rate -->
+    <div class="kpi-card" style="border-top: 3px solid #10b981;">
+        <div class="kpi-card-header">
+            <span class="kpi-title">Threat Incidence Rate</span>
+            <div class="kpi-icon-wrap icon-emerald">
+                <i class="fa-solid fa-percent"></i>
+            </div>
+        </div>
+        <div class="kpi-value" id="kpi-rate" style="color: #34d399;">--%</div>
+        <div class="kpi-footer">
+            <span class="kpi-trend" style="color: #34d399;">
+                <i class="fa-solid fa-circle-check"></i> Baselined
+            </span>
+            <span>&middot; SLA target &lt; 5.0%</span>
+        </div>
     </div>
 </section>
 
-<!-- Interactive Charts Grid -->
+<!-- Interactive Cyber Visualizations -->
 <section class="charts-grid">
-    <!-- Chart 1: Risk Distribution -->
+    <!-- Chart 1: Risk Classification Distribution -->
     <div class="chart-card">
         <div class="chart-header">
-            <h3 class="chart-title">Transactions by Risk Level</h3>
-            <span style="font-size: 0.78rem; color: #64748b;">Low &lt;40 | Medium 40-69 | High ≥70</span>
+            <div class="chart-title-group">
+                <h3>Risk Spectrum Breakdown</h3>
+                <span>Distribution across Low (&lt;40), Medium (40-69), and Critical High (&ge;70)</span>
+            </div>
+            <div style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--accent-blue);">
+                <i class="fa-solid fa-circle-nodes"></i> Real-Time
+            </div>
         </div>
         <div class="chart-wrapper">
             <canvas id="riskDistributionChart"></canvas>
         </div>
     </div>
 
-    <!-- Chart 2: Alerts Over Time -->
+    <!-- Chart 2: Fraud Alert Velocity Over Time -->
     <div class="chart-card">
         <div class="chart-header">
-            <h3 class="chart-title">Fraud Alerts Over Time</h3>
-            <span style="font-size: 0.78rem; color: #64748b;">Last 7 Days Trend</span>
+            <div class="chart-title-group">
+                <h3>Suspicious Alert Trajectory</h3>
+                <span>7-Day anomalous activity velocity and incident density trend</span>
+            </div>
+            <div style="font-size: 0.8rem; font-family: var(--font-mono); color: #fb7185;">
+                <i class="fa-solid fa-arrow-trend-up"></i> 7D Density
+            </div>
         </div>
         <div class="chart-wrapper">
             <canvas id="alertsTimelineChart"></canvas>
@@ -56,16 +110,51 @@
     </div>
 </section>
 
-<!-- Quick Action & DevOps Callout -->
-<section class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 1.05rem; font-weight: 600;">System DevOps & Operations Guide</h3>
-        <a href="{{ url_for('main.transactions_view') }}" class="btn btn-primary btn-sm">Explore All Transactions ➔</a>
+<!-- DevOps Operational Telemetry Banner -->
+<section class="card" style="border-left: 4px solid var(--accent-blue);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff;">
+                <i class="fa-solid fa-microchip" style="color: var(--accent-blue); margin-right: 8px;"></i>
+                DevOps & Observability Engine Architecture
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+                Automated continuous scoring and Prometheus scrape cluster specifications
+            </p>
+        </div>
+        <a href="{{ url_for('main.transactions_view') }}" class="btn btn-primary btn-sm">
+            <span>Explore All Transactions</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
     </div>
-    <div style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
-        <p>• <strong>Automated Scoring:</strong> Every inbound transaction is immediately processed by the rule-based engine in <code>fraud_engine.py</code>.</p>
-        <p>• <strong>Monitoring:</strong> Metrics are exposed at <a href="/metrics" target="_blank"><code>/metrics</code></a> and continuously scraped by Prometheus (Port 9090) and visualized on Grafana (Port 3000).</p>
-        <p>• <strong>Health Probes:</strong> Docker and Kubernetes health checks are serviced at <a href="/health" target="_blank"><code>/health</code></a>.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 14px;">
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-sliders"></i> Engine Rules
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.5;">
+                Instant scoring in <code>fraud_engine.py</code> evaluates amount thresholds (&gt;₹50k), night hours (12AM-5AM), and user transaction velocity (&gt;3 txns / 10m).
+            </p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: #34d399; font-weight: 700;">
+                <i class="fa-solid fa-chart-line"></i> Prometheus Scrape
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.5;">
+                Pulls metrics at <a href="/metrics" target="_blank" style="color: var(--accent-blue);"><code>/metrics</code></a> every 5s with request duration histograms and fraud gauge counters.
+            </p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: #fbbf24; font-weight: 700;">
+                <i class="fa-solid fa-heart-pulse"></i> Health Probes
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.5;">
+                Docker & Kubernetes synthetic uptime probe at <a href="/health" target="_blank" style="color: var(--accent-blue);"><code>/health</code></a> checks SQLite connectivity and active ledger counts.
+            </p>
+        </div>
     </div>
 </section>
 {% endblock %}

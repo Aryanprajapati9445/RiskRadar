@@ -1,57 +1,105 @@
 {% extends "base.html" %}
 
-{% block title %}Investigate Transaction #{{ txn.id }} - FraudGuard{% endblock %}
-{% block page_title %}Case Investigation - Transaction #{{ txn.id }}{% endblock %}
+{% block title %}Threat Dossier #{{ "%05d"|format(txn.id) }} &middot; FraudGuard CyberOps{% endblock %}
+{% block page_title %}Incident Dossier: Transaction #{{ "%05d"|format(txn.id) }}{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 16px;">
-    <a href="{{ url_for('main.transactions_view') }}" style="color: #64748b; text-decoration: none; font-size: 0.88rem;">
-        &larr; Back to Transactions
+<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{{ url_for('main.transactions_view') }}" class="cyber-pill">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Return to Feed</span>
     </a>
+    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+        INGESTED: {{ txn.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+    </span>
 </div>
 
+<!-- Top Threat Score Banner with Circular Gauge -->
+<section class="threat-score-panel">
+    <div class="gauge-circle" style="
+        background: radial-gradient(circle, rgba(19, 29, 51, 1) 50%, transparent 52%), 
+                    conic-gradient({% if txn.risk_level == 'High' %}#f43f5e{% elif txn.risk_level == 'Medium' %}#f59e0b{% else %}#10b981{% endif %} {{ txn.risk_score * 3.6 }}deg, rgba(255,255,255,0.08) 0deg);
+        border: 2px solid rgba(255,255,255,0.1);
+    ">
+        <div class="score-num" style="color: {% if txn.risk_level == 'High' %}#fb7185{% elif txn.risk_level == 'Medium' %}#fbbf24{% else %}#34d399{% endif %};">
+            {{ txn.risk_score }}
+        </div>
+        <div class="score-max">RISK / 100</div>
+    </div>
+
+    <div style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">
+                {% if txn.risk_level == 'High' %}
+                    <span style="color: #fb7185;">CRITICAL THREAT LEVEL</span>
+                {% elif txn.risk_level == 'Medium' %}
+                    <span style="color: #fbbf24;">ELEVATED RISK LEVEL</span>
+                {% else %}
+                    <span style="color: #34d399;">BASELINE NORMAL LEVEL</span>
+                {% endif %}
+            </h2>
+            <span class="badge {% if txn.risk_level == 'High' %}badge-high{% elif txn.risk_level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}">
+                Classification: {{ txn.risk_level }}
+            </span>
+        </div>
+        <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+            Evaluated synchronously during ingestion by the <code>fraud_engine.py</code> algorithmic rule pipeline.
+            {% if txn.risk_score >= 40 %}
+                Flagged for mandatory operator verification prior to final settlement.
+            {% else %}
+                Normal financial payload adhering to authorized velocity and monetary parameters.
+            {% endif %}
+        </p>
+    </div>
+</section>
+
 <div class="investigation-grid">
-    <!-- Left Column: Details & Triggered Rules -->
+    <!-- Left Column: Payload Telemetry & Threat Vectors -->
     <div>
         <div class="card">
-            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">Transaction Overview</h3>
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-file-invoice-dollar" style="color: var(--accent-blue);"></i>
+                <span>Transaction Telemetry Details</span>
+            </h3>
             
-            <table class="data-table" style="margin-bottom: 16px;">
+            <table class="data-table" style="margin-bottom: 22px;">
                 <tr>
-                    <td style="width: 35%; font-weight: 600; color: #475569;">Transaction ID</td>
-                    <td><code>#{{ txn.id }}</code></td>
+                    <td style="width: 38%; color: var(--text-muted); font-weight: 600;">Transaction ID</td>
+                    <td><span class="id-chip">#{{ "%05d"|format(txn.id) }}</span></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: 600; color: #475569;">User Account</td>
-                    <td><strong>{{ txn.user_id }}</strong></td>
+                    <td style="color: var(--text-muted); font-weight: 600;">User Account</td>
+                    <td><span class="user-badge"><i class="fa-solid fa-user-tag" style="color: var(--accent-blue);"></i> {{ txn.user_id }}</span></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: 600; color: #475569;">Transaction Amount</td>
-                    <td style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">₹{{ "{:,.2f}".format(txn.amount) }}</td>
+                    <td style="color: var(--text-muted); font-weight: 600;">Monetary Value</td>
+                    <td style="font-size: 1.35rem; font-weight: 800; color: #fff; font-family: var(--font-mono);">
+                        ₹{{ "{:,.2f}".format(txn.amount) }}
+                    </td>
                 </tr>
                 <tr>
-                    <td style="font-weight: 600; color: #475569;">City / Location</td>
-                    <td>{{ txn.city }}</td>
+                    <td style="color: var(--text-muted); font-weight: 600;">Origin Location</td>
+                    <td><i class="fa-solid fa-location-dot" style="color: var(--accent-blue); margin-right: 4px;"></i> {{ txn.city }}</td>
                 </tr>
                 <tr>
-                    <td style="font-weight: 600; color: #475569;">Payment Method</td>
-                    <td><span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">{{ txn.type }}</span></td>
+                    <td style="color: var(--text-muted); font-weight: 600;">Payment Protocol</td>
+                    <td>
+                        <span style="font-family: var(--font-mono); background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem;">
+                            {{ txn.type }}
+                        </span>
+                    </td>
                 </tr>
                 <tr>
-                    <td style="font-weight: 600; color: #475569;">Timestamp</td>
-                    <td>{{ txn.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: 600; color: #475569;">Current Status</td>
-                    <td id="status-display">
+                    <td style="color: var(--text-muted); font-weight: 600;">Current Case Status</td>
+                    <td>
                         {% if txn.status == 'Safe' %}
-                            <span class="badge badge-safe">Safe</span>
+                            <span class="badge badge-safe"><i class="fa-solid fa-circle-check"></i> Safe</span>
                         {% elif txn.status == 'Flagged' %}
-                            <span class="badge badge-flagged">Flagged</span>
+                            <span class="badge badge-flagged"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>
                         {% elif txn.status == 'Confirmed Fraud' %}
-                            <span class="badge badge-fraud">Confirmed Fraud</span>
+                            <span class="badge badge-fraud"><i class="fa-solid fa-skull"></i> Confirmed Fraud</span>
                         {% elif txn.status == 'Blocked' %}
-                            <span class="badge badge-blocked">Blocked</span>
+                            <span class="badge badge-blocked"><i class="fa-solid fa-ban"></i> Blocked</span>
                         {% else %}
                             <span class="badge badge-safe">{{ txn.status }}</span>
                         {% endif %}
@@ -59,83 +107,105 @@
                 </tr>
             </table>
 
-            <h4 style="font-size: 0.95rem; font-weight: 600; margin: 20px 0 10px;">Fraud Engine Assessment</h4>
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
-                <div style="font-size: 1.8rem; font-weight: 800; color: {% if txn.risk_level == 'High' %}#ef4444{% elif txn.risk_level == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">
-                    {{ txn.risk_score }} / 100
-                </div>
-                <div>
-                    <div style="font-weight: 600;">Risk Classification: {{ txn.risk_level }}</div>
-                    <div style="font-size: 0.78rem; color: #64748b;">Evaluated at ingestion time via fraud_engine.py</div>
-                </div>
-            </div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i>
+                <span>Active Threat Vectors & Triggered Rules</span>
+            </h4>
 
-            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Triggered Detection Rules:</div>
             {% set rules = txn.get_rules_list() %}
             {% if rules %}
                 {% for rule in rules %}
-                    <div class="rule-pill">
-                        <span>⚠️</span>
-                        <span>{{ rule }}</span>
+                    <div class="rule-threat-card">
+                        <i class="fa-solid fa-biohazard" style="color: #fb7185; font-size: 1.1rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 0.88rem; color: #fff;">{{ rule }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                                Anomalous characteristic violated baseline safety threshold.
+                            </div>
+                        </div>
                     </div>
                 {% endfor %}
             {% else %}
-                <div style="font-size: 0.85rem; color: #166534; background: #dcfce7; padding: 10px 14px; border-radius: 6px;">
-                    ✅ No suspicious risk rules triggered. Transaction conforms to baseline behavior.
+                <div class="rule-threat-card safe">
+                    <i class="fa-solid fa-circle-check" style="color: #34d399; font-size: 1.1rem;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 0.88rem; color: #34d399;">Zero Rule Violations Triggered</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            Transaction parameters comply with all daily monetary and temporal security baselines.
+                        </div>
+                    </div>
                 </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Right Column: Investigation Actions & Audit History -->
+    <!-- Right Column: Operator Decision Station & Audit History -->
     <div>
-        <div class="card">
-            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;">Analyst Decision & Actions</h3>
-            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">
-                Choose an action below to update the transaction status. All actions are immutably logged into the audit case history.
+        <div class="card" style="border-top: 3px solid var(--accent-blue);">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-gavel" style="color: var(--accent-blue);"></i>
+                <span>Operator Incident Resolution</span>
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">
+                Select a resolution disposition below. Every action executes an atomic state transition and writes an immutable audit record.
             </p>
 
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label class="form-label" for="investigation-notes">Investigation Notes / Justification</label>
-                <textarea id="investigation-notes" class="form-textarea" rows="4" placeholder="Enter findings, verification calls, or rationale for this decision...">{{ txn.notes or '' }}</textarea>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" for="investigation-notes">
+                    <i class="fa-solid fa-pen-to-square"></i> Case Remarks / Rationale
+                </label>
+                <textarea id="investigation-notes" class="form-textarea" rows="4" placeholder="Detail verification calls, customer interview, or justification for status change...">{{ txn.notes or '' }}</textarea>
             </div>
 
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-danger" onclick="submitCaseStatus('Confirmed Fraud')">
-                    🚨 Confirmed Fraud
+                <button type="button" class="btn btn-danger" style="flex: 1; min-width: 140px;" onclick="submitCaseStatus('Confirmed Fraud')">
+                    <i class="fa-solid fa-skull"></i> Confirmed Fraud
                 </button>
-                <button type="button" class="btn btn-success" onclick="submitCaseStatus('Safe')">
-                    ✅ Mark Safe
+                <button type="button" class="btn btn-success" style="flex: 1; min-width: 130px;" onclick="submitCaseStatus('Safe')">
+                    <i class="fa-solid fa-check"></i> Mark Safe
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="submitCaseStatus('Blocked')">
-                    ⛔ Block User/Card
+                <button type="button" class="btn btn-secondary" style="flex: 1; min-width: 130px;" onclick="submitCaseStatus('Blocked')">
+                    <i class="fa-solid fa-ban"></i> Block User
                 </button>
             </div>
 
             <div id="action-feedback" style="margin-top: 14px; display: none;"></div>
         </div>
 
-        <!-- Case Audit Trail -->
+        <!-- Case Audit History Card -->
         <div class="card">
-            <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 14px;">Case Investigation History</h3>
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-blue);"></i>
+                <span>Case Audit Log History</span>
+            </h3>
+            
             <div id="case-history-container">
                 {% if cases %}
                     {% for c in cases %}
-                        <div style="border-left: 3px solid #3b82f6; padding-left: 12px; margin-bottom: 14px; font-size: 0.85rem;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                <strong>Action: {{ c.action }}</strong>
-                                <span style="color: #64748b; font-size: 0.78rem;">{{ c.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        <div style="border-left: 2px solid var(--accent-blue); padding-left: 14px; margin-bottom: 18px; position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong style="font-size: 0.88rem; color: #fff;">
+                                    Action: <span style="color: var(--accent-blue);">{{ c.action }}</span>
+                                </strong>
+                                <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">
+                                    {{ c.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </span>
                             </div>
-                            <div style="color: #475569;">Analyst: <code>{{ c.analyst_username }}</code></div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                Analyst: <code style="color: var(--accent-blue);">{{ c.analyst_username }}</code>
+                            </div>
                             {% if c.notes %}
-                                <div style="margin-top: 4px; color: #1e293b; background: #f8fafc; padding: 6px 8px; border-radius: 4px;">
+                                <div style="margin-top: 6px; font-size: 0.82rem; color: #cbd5e1; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); padding: 8px 10px; border-radius: 6px;">
                                     "{{ c.notes }}"
                                 </div>
                             {% endif %}
                         </div>
                     {% endfor %}
                 {% else %}
-                    <p style="font-size: 0.85rem; color: #64748b;">No prior case actions taken on this transaction yet.</p>
+                    <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.84rem;">
+                        <i class="fa-solid fa-clipboard-check" style="font-size: 1.6rem; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
+                        No prior case decisions recorded on this transaction yet.
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -149,31 +219,24 @@ async function submitCaseStatus(status) {
     const notes = document.getElementById("investigation-notes").value;
     const feedbackEl = document.getElementById("action-feedback");
     feedbackEl.style.display = "block";
-    feedbackEl.innerHTML = `<span style="color: #3b82f6;">Updating transaction status...</span>`;
+    feedbackEl.innerHTML = `<span style="color: var(--accent-blue);"><i class="fa-solid fa-spinner fa-spin"></i> Persisting status to ledger...</span>`;
 
     try {
         const response = await fetch("/api/transactions/{{ txn.id }}/status", {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                status: status,
-                notes: notes
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: status, notes: notes })
         });
 
         const data = await response.json();
         if (data.success) {
-            feedbackEl.innerHTML = `<span style="color: #15803d; font-weight: 600;">Status updated to "${status}" successfully! Reloading...</span>`;
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            feedbackEl.innerHTML = `<span style="color: #34d399; font-weight: 600;"><i class="fa-solid fa-check"></i> Status updated to "${status}" successfully! Refreshing...</span>`;
+            setTimeout(() => { window.location.reload(); }, 900);
         } else {
-            feedbackEl.innerHTML = `<span style="color: #b91c1c;">Error: ${data.error || 'Failed to update'}</span>`;
+            feedbackEl.innerHTML = `<span style="color: #fb7185;"><i class="fa-solid fa-xmark"></i> Error: ${data.error || 'Failed to update'}</span>`;
         }
     } catch (err) {
-        feedbackEl.innerHTML = `<span style="color: #b91c1c;">Network or server error updating status</span>`;
+        feedbackEl.innerHTML = `<span style="color: #fb7185;"><i class="fa-solid fa-triangle-exclamation"></i> Network error persisting update</span>`;
     }
 }
 </script>

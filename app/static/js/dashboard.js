@@ -1,6 +1,6 @@
 /**
- * Dashboard Analytics and Chart.js Controller
- * Loads metrics from /api/stats and renders interactive charts.
+ * FraudGuard CyberOps - Analytics & Chart Controller
+ * Renders high-tech linear gradients and dark theme charts.
  */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -33,10 +33,10 @@ function updateKpiCards(cards) {
     const highRiskEl = document.getElementById("kpi-high-risk");
     const rateEl = document.getElementById("kpi-rate");
 
-    if (totalEl) totalEl.textContent = cards.total_transactions.toLocaleString();
-    if (flaggedEl) flaggedEl.textContent = cards.flagged_transactions.toLocaleString();
-    if (highRiskEl) highRiskEl.textContent = cards.high_risk_count.toLocaleString();
-    if (rateEl) rateEl.textContent = cards.fraud_percentage.toFixed(2) + "%";
+    if (totalEl) totalEl.textContent = Number(cards.total_transactions).toLocaleString();
+    if (flaggedEl) flaggedEl.textContent = Number(cards.flagged_transactions).toLocaleString();
+    if (highRiskEl) highRiskEl.textContent = Number(cards.high_risk_count).toLocaleString();
+    if (rateEl) rateEl.textContent = Number(cards.fraud_percentage).toFixed(2) + "%";
 }
 
 function renderRiskDistributionChart(dist) {
@@ -54,12 +54,13 @@ function renderRiskDistributionChart(dist) {
             datasets: [{
                 data: dist.counts,
                 backgroundColor: [
-                    "#22c55e", // Low (Green)
-                    "#f59e0b", // Medium (Amber)
-                    "#ef4444"  // High (Red)
+                    "#10b981", // Low Risk (Cyber Emerald)
+                    "#f59e0b", // Medium Risk (Cyber Amber)
+                    "#f43f5e"  // High Risk (Crimson Danger)
                 ],
                 borderWidth: 2,
-                borderColor: "#ffffff"
+                borderColor: "#0f172a",
+                hoverOffset: 6
             }]
         },
         options: {
@@ -70,12 +71,27 @@ function renderRiskDistributionChart(dist) {
                     position: "bottom",
                     labels: {
                         boxWidth: 12,
-                        padding: 15,
-                        font: { size: 12 }
+                        padding: 16,
+                        color: "#94a3b8",
+                        font: { 
+                            size: 12, 
+                            family: "'Inter', sans-serif",
+                            weight: 500
+                        }
                     }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    borderColor: "rgba(255, 255, 255, 0.1)",
+                    borderWidth: 1,
+                    titleColor: "#ffffff",
+                    bodyColor: "#94a3b8",
+                    padding: 12,
+                    boxPadding: 6,
+                    cornerRadius: 8
                 }
             },
-            cutout: "65%"
+            cutout: "70%"
         }
     });
 }
@@ -88,6 +104,11 @@ function renderAlertsTimelineChart(timeline) {
         timelineChartInstance.destroy();
     }
 
+    const canvas = ctx.getContext("2d");
+    const gradient = canvas.createLinearGradient(0, 0, 0, 280);
+    gradient.addColorStop(0, "rgba(244, 63, 94, 0.35)");
+    gradient.addColorStop(1, "rgba(244, 63, 94, 0.0)");
+
     timelineChartInstance = new Chart(ctx, {
         type: "line",
         data: {
@@ -95,14 +116,16 @@ function renderAlertsTimelineChart(timeline) {
             datasets: [{
                 label: "Suspicious Flagged Transactions",
                 data: timeline.data,
-                borderColor: "#ef4444",
-                backgroundColor: "rgba(239, 68, 68, 0.12)",
+                borderColor: "#f43f5e",
+                backgroundColor: gradient,
                 fill: true,
-                tension: 0.35,
-                borderWidth: 2.5,
-                pointBackgroundColor: "#ef4444",
-                pointRadius: 4,
-                pointHoverRadius: 6
+                tension: 0.38,
+                borderWidth: 3,
+                pointBackgroundColor: "#f43f5e",
+                pointBorderColor: "#0f172a",
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 8
             }]
         },
         options: {
@@ -112,13 +135,19 @@ function renderAlertsTimelineChart(timeline) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0
+                        precision: 0,
+                        color: "#64748b",
+                        font: { family: "'JetBrains Mono', monospace", size: 11 }
                     },
                     grid: {
-                        color: "#f1f5f9"
+                        color: "rgba(255, 255, 255, 0.04)"
                     }
                 },
                 x: {
+                    ticks: {
+                        color: "#64748b",
+                        font: { family: "'JetBrains Mono', monospace", size: 11 }
+                    },
                     grid: {
                         display: false
                     }
@@ -127,6 +156,16 @@ function renderAlertsTimelineChart(timeline) {
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    borderColor: "rgba(244, 63, 94, 0.4)",
+                    borderWidth: 1,
+                    titleColor: "#ffffff",
+                    bodyColor: "#f43f5e",
+                    padding: 12,
+                    boxPadding: 6,
+                    cornerRadius: 8
                 }
             }
         }
