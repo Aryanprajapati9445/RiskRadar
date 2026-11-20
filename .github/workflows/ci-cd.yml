@@ -22,6 +22,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # STEP 1: Inspect GitHub OIDC claims
+      - name: Inspect GitHub OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+
+            const payload = JSON.parse(
+              Buffer.from(token.split('.')[1], 'base64').toString('utf8')
+            );
+
+            core.info(JSON.stringify({
+              issuer: payload.iss,
+              audience: payload.aud,
+              subject: payload.sub,
+              repository: payload.repository,
+              repository_id: payload.repository_id,
+              repository_owner: payload.repository_owner,
+              repository_owner_id: payload.repository_owner_id,
+              ref: payload.ref
+            }, null, 2));
+
+      # STEP 2: Configure AWS credentials using OIDC
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -29,9 +52,11 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-session-name: RiskRadarGitHubDeployment
 
+      # STEP 3: Verify AWS identity
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
+      # STEP 4: Create deployment script
       - name: Create deployment script
         shell: bash
         run: |
@@ -92,6 +117,7 @@ jobs:
           exit 1
           SCRIPT
 
+      # STEP 5: Send deployment command through SSM
       - name: Send deployment command through SSM
         id: deploy
         shell: bash
@@ -120,6 +146,7 @@ jobs:
 
           echo "SSM command ID: $COMMAND_ID"
 
+      # STEP 6: Wait for deployment result
       - name: Wait for deployment result
         shell: bash
         env:
