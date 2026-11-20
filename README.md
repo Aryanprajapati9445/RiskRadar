@@ -160,11 +160,11 @@ fraud-detection-dashboard/
    ```
 
 3. **Access Services**:
-   - 🛡️ **FraudGuard Web Application**: [http://localhost:5000](http://localhost:5000)
-   - 📈 **Prometheus Metrics Target**: [http://localhost:9090](http://localhost:9090)
-   - 📊 **Grafana Executive Dashboard**: [http://localhost:3000](http://localhost:3000) *(User: `admin`, Password: `admin`)*
+   - 🛡️ **FraudGuard Web Application**: (http://ec2-65-0-127-55.ap-south-1.compute.amazonaws.com:5001/login)
+   - 📈 **Prometheus Metrics Target**: (http://ec2-65-0-127-55.ap-south-1.compute.amazonaws.com:3000/dashboards)
+   - 📊 **Grafana Executive Dashboard**: (http://ec2-65-0-127-55.ap-south-1.compute.amazonaws.com:3000/login  ) *(User: `admin`, Password: `admin123`)*
    - 🩺 **Health Check**: [http://localhost:5000/health](http://localhost:5000/health)
-   - 📉 **Prometheus Metrics**: [http://localhost:5000/metrics](http://localhost:5000/metrics)
+   - 📉 **Prometheus Metrics**: (http://ec2-65-0-127-55.ap-south-1.compute.amazonaws.com:9090)
 
 4. **Stop Services**:
    ```bash
