@@ -1,82 +1,162 @@
-name: FraudGuard CI/CD Pipeline
+
+name: RiskRadar Production Deployment
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: riskradar-production
+  cancel-in-progress: false
 
 jobs:
-  # -------------------------------------------------------------
-  # Stage 1: Build & Quality Assurance (Lint, Pytest, Security Scan)
-  # -------------------------------------------------------------
-  quality-assurance:
-    name: Code Quality & Security Tests
+  deploy:
+    name: Deploy to AWS EC2
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          python-version: "3.11"
-          cache: "pip"
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: RiskRadarGitHubDeployment
 
-      - name: Install Dependencies
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Create deployment script
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          cat > deploy.sh <<'SCRIPT'
+          #!/bin/bash
+          set -Eeuo pipefail
 
-      - name: Run Linting (flake8)
-        run: |
-          # Stop build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings. Max line length 120
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+          APP_DIR="/home/ubuntu/apps/RiskRadar"
+          BACKUP_ENV="/home/ubuntu/.riskradar.env"
 
-      - name: Run Unit & API Tests (pytest)
-        run: |
-          pytest -v --tb=short
+          cd "$APP_DIR"
 
-      - name: Run Security Scan (Bandit)
-        run: |
-          bandit -r app/ -ll -ii
+          echo "Backing up production environment..."
 
-  # -------------------------------------------------------------
-  # Stage 2: Docker Build & Registry Push
-  # -------------------------------------------------------------
-  docker-build-push:
-    name: Build & Push Docker Image
-    needs: quality-assurance
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+          if [ ! -f .env ]; then
+            echo "ERROR: Production .env file is missing."
+            exit 1
+          fi
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+          cp -p .env "$BACKUP_ENV"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          echo "Fetching latest main branch..."
 
-      - name: Log in to Docker Hub (Optional when secrets are present)
-        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          git -c safe.directory="$APP_DIR" fetch origin main
+
+          git -c safe.directory="$APP_DIR" reset --hard origin/main
+
+          echo "Restoring production environment..."
+
+          cp -p "$BACKUP_ENV" .env
+          chmod 600 .env
+
+          echo "Validating Docker Compose configuration..."
+
+          docker compose config -q
+
+          echo "Building and deploying RiskRadar..."
+
+          docker compose up -d --build --no-deps app
+
+          echo "Waiting for application health check..."
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5001/health; then
+              echo
+              echo "RiskRadar deployment successful."
+              docker compose ps
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "ERROR: RiskRadar health check failed."
+
+          docker compose logs --tail=100 app
+
+          exit 1
+          SCRIPT
+
+      - name: Send deployment command through SSM
+        id: deploy
+        shell: bash
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+        run: |
+          jq -n \
+            --arg instance "$INSTANCE_ID" \
+            --rawfile script deploy.sh \
+            '{
+              DocumentName: "AWS-RunShellScript",
+              InstanceIds: [$instance],
+              Parameters: {
+                commands: [$script]
+              },
+              TimeoutSeconds: 600,
+              Comment: "RiskRadar automatic deployment from GitHub Actions"
+            }' > ssm-request.json
 
-      - name: Build Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' }}
-          tags: ${{ secrets.DOCKER_USERNAME }}/fraud-detection-dashboard:latest
+          COMMAND_ID=$(aws ssm send-command \
+            --cli-input-json file://ssm-request.json \
+            --query 'Command.CommandId' \
+            --output text)
+
+          echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
+
+          echo "SSM command ID: $COMMAND_ID"
+
+      - name: Wait for deployment result
+        shell: bash
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          COMMAND_ID: ${{ steps.deploy.outputs.command_id }}
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+        run: |
+          for i in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null || echo "Pending")
+
+            echo "Deployment status: $STATUS"
+
+            if [ "$STATUS" = "Success" ]; then
+              aws ssm get-command-invocation \
+                --command-id "$COMMAND_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --query 'StandardOutputContent' \
+                --output text
+              exit 0
+            fi
+
+            if [[ "$STATUS" == "Failed" || \
+                  "$STATUS" == "Cancelled" || \
+                  "$STATUS" == "TimedOut" ]]; then
+
+              aws ssm get-command-invocation \
+                --command-id "$COMMAND_ID" \
+                --instance-id "$INSTANCE_ID"
+
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          echo "Deployment did not finish within the expected time."
+          exit 1
